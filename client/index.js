@@ -206,7 +206,7 @@ function getActiveSequence() {
         if (result === 'EvalScript error.') {
             updateStatus('Error: Failed to get active sequence');
         } else {
-            updateStatus(`Active sequence: ${result}`);
+            updateStatus(result);
         }
     });
 }
@@ -219,10 +219,21 @@ function setPlayheadPosition() {
             if (result === 'EvalScript error.') {
                 updateStatus('Error: Failed to set playhead position');
             } else {
-                updateStatus(`Playhead moved to ${time} seconds`);
+                updateStatus(result);
             }
         });
     }
+}
+
+function getPlayheadPosition() {
+    updateStatus('Getting playhead position...');
+    csInterface.evalScript('getPlayheadPosition()', (result) => {
+        if (result === 'EvalScript error.') {
+            updateStatus('Error: Failed to get playhead position');
+        } else {
+            updateStatus(result);
+        }
+    });
 }
 
 function getSequenceSettings() {
@@ -231,7 +242,7 @@ function getSequenceSettings() {
         if (result === 'EvalScript error.') {
             updateStatus('Error: Failed to get sequence settings');
         } else {
-            updateStatus(`Sequence settings: ${result}`);
+            updateStatus(result);
         }
     });
 }
@@ -265,11 +276,11 @@ function setInOutPoints() {
     const outPoint = prompt('Enter out point (seconds):');
     if (inPoint && outPoint && !isNaN(inPoint) && !isNaN(outPoint)) {
         updateStatus(`Setting in/out points: ${inPoint}s - ${outPoint}s`);
-        csInterface.evalScript(`setInOutPoints(${inPoint}, ${outPoint})`, (result) => {
+        csInterface.evalScript(`setClipInOut(${inPoint}, ${outPoint})`, (result) => {
             if (result === 'EvalScript error.') {
                 updateStatus('Error: Failed to set in/out points');
             } else {
-                updateStatus('In/out points set successfully!');
+                updateStatus(result);
             }
         });
     }
@@ -346,7 +357,18 @@ function enableQE() {
         if (result === 'EvalScript error.') {
             updateStatus('Error: Failed to enable QE API');
         } else {
-            updateStatus('QE API enabled successfully!');
+            updateStatus('QE API enabled: ' + result);
+        }
+    });
+}
+
+function addCropEffect() {
+    updateStatus('Adding Crop effect...');
+    csInterface.evalScript('addCropEffect()', (result) => {
+        if (result === 'EvalScript error.') {
+            updateStatus('Error: Failed to add Crop effect');
+        } else {
+            updateStatus(result);
         }
     });
 }
@@ -535,7 +557,44 @@ function getAppProperties() {
         if (result === 'EvalScript error.') {
             updateStatus('Error: Failed to get app properties');
         } else {
-            updateStatus(`App properties: ${result}`);
+            updateStatus(result);
+        }
+    });
+}
+
+// ===== ADDITIONAL QE API FUNCTIONS =====
+
+function reflectQEMethods() {
+    updateStatus('Reflecting QE API methods...');
+    csInterface.evalScript('reflectQEMethods()', (result) => {
+        if (result === 'EvalScript error.') {
+            updateStatus('Error: Failed to reflect QE methods');
+        } else {
+            updateStatus(result);
+        }
+    });
+}
+
+// ===== DIAGNOSTIC FUNCTIONS =====
+
+function getProjectInfo() {
+    updateStatus('Getting project information...');
+    csInterface.evalScript('getProjectInfo()', (result) => {
+        if (result === 'EvalScript error.') {
+            updateStatus('Error: Failed to get project info');
+        } else {
+            updateStatus(result);
+        }
+    });
+}
+
+function testAPICompatibility() {
+    updateStatus('Testing API compatibility...');
+    csInterface.evalScript('testAPICompatibility()', (result) => {
+        if (result === 'EvalScript error.') {
+            updateStatus('Error: Failed to test API compatibility');
+        } else {
+            updateStatus(result);
         }
     });
 }

@@ -2,7 +2,8 @@
 
 function createNewProject() {
     try {
-        app.project.new();
+        // Correct method based on kiro.md: app.newProject(path) with optional path
+        app.newProject();
         return "New project created successfully";
     } catch (e) {
         return "Error creating new project: " + e.toString();
@@ -11,9 +12,9 @@ function createNewProject() {
 
 function openProject() {
     try {
-        // This would typically open a file dialog, but for demo purposes
-        // we'll just return a message
-        return "Project open dialog would appear here";
+        // Based on kiro.md: app.project.open(path) - would need file dialog in real implementation
+        // For testing purposes, we'll simulate the call
+        return "Project open: Use app.project.open(path) with file dialog";
     } catch (e) {
         return "Error opening project: " + e.toString();
     }
@@ -39,8 +40,11 @@ function closeProject() {
 
 function importFiles() {
     try {
-        // This would typically open a file dialog for importing
-        return "Import files dialog would appear here";
+        // Based on kiro.md: app.project.importFiles(pathsArray)
+        // For testing, we'll simulate with a sample path array
+        var samplePaths = ["C:\\sample\\video.mp4"]; // Would be from file dialog in real implementation
+        // app.project.importFiles(samplePaths);
+        return "Import files: Use app.project.importFiles(pathsArray) with file dialog selection";
     } catch (e) {
         return "Error importing files: " + e.toString();
     }
@@ -59,8 +63,14 @@ function createBin(binName) {
 
 function createSequence(sequenceName) {
     try {
-        app.project.createNewSequence(sequenceName, "sequenceID");
-        return "Sequence '" + sequenceName + "' created successfully";
+        // Based on kiro.md: app.project.createNewSequence() with sequenceName and sequenceID
+        var sequenceID = "seq_" + Date.now(); // Generate unique ID
+        var newSequence = app.project.createNewSequence(sequenceName, sequenceID);
+        if (newSequence) {
+            return "Sequence '" + sequenceName + "' created successfully with ID: " + sequenceID;
+        } else {
+            return "Failed to create sequence - returned 0";
+        }
     } catch (e) {
         return "Error creating sequence: " + e.toString();
     }
@@ -81,10 +91,11 @@ function getActiveSequence() {
 function setPlayheadPosition(timeInSeconds) {
     try {
         if (app.project.activeSequence) {
+            // Based on kiro.md: activeSequence.setPlayerPosition(time) - time can be seconds or Time object
             app.project.activeSequence.setPlayerPosition(timeInSeconds);
             return "Playhead moved to " + timeInSeconds + " seconds";
         } else {
-            return "No active sequence";
+            return "No active sequence available";
         }
     } catch (e) {
         return "Error setting playhead position: " + e.toString();
@@ -94,10 +105,13 @@ function setPlayheadPosition(timeInSeconds) {
 function getSequenceSettings() {
     try {
         if (app.project.activeSequence) {
-            var settings = app.project.activeSequence.sequenceSettings;
-            return "Sequence settings retrieved successfully";
+            var seq = app.project.activeSequence;
+            var info = "Sequence: " + seq.name +
+                ", Frame Rate: " + seq.framerate +
+                ", Duration: " + seq.end.seconds + "s";
+            return info;
         } else {
-            return "No active sequence";
+            return "No active sequence available";
         }
     } catch (e) {
         return "Error getting sequence settings: " + e.toString();
@@ -108,11 +122,17 @@ function getSequenceSettings() {
 
 function insertClip() {
     try {
-        if (app.project.activeSequence && app.project.activeSequence.videoTracks.length > 0) {
-            // This is a simplified example - in practice you'd need to specify the item and time
-            return "Insert clip operation would be performed here";
+        if (app.project.activeSequence && app.project.rootItem.children.numItems > 0) {
+            // Based on kiro.md: sequence.insertClip(projectItem, time, vTrackIndex, aTrackIndex)
+            var projectItem = app.project.rootItem.children[0]; // First item in project
+            var currentTime = app.project.activeSequence.getPlayerPosition();
+            var vTrackIndex = 0; // V1
+            var aTrackIndex = 0; // A1
+
+            app.project.activeSequence.insertClip(projectItem, currentTime, vTrackIndex, aTrackIndex);
+            return "Clip inserted at playhead position on V1/A1";
         } else {
-            return "No active sequence or video tracks available";
+            return "No active sequence or project items available";
         }
     } catch (e) {
         return "Error inserting clip: " + e.toString();
@@ -121,11 +141,13 @@ function insertClip() {
 
 function removeClip() {
     try {
-        if (app.project.activeSequence && app.project.activeSequence.videoTracks.length > 0) {
-            // This would remove the selected clip
-            return "Remove clip operation would be performed here";
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
+            // Based on kiro.md: TrackItem.remove() method
+            var clip = app.project.activeSequence.videoTracks[0].clips[0];
+            clip.remove();
+            return "First clip on V1 removed successfully";
         } else {
-            return "No active sequence or clips available";
+            return "No active sequence or clips available on V1";
         }
     } catch (e) {
         return "Error removing clip: " + e.toString();
@@ -134,11 +156,12 @@ function removeClip() {
 
 function setInOutPoints(inPoint, outPoint) {
     try {
-        if (app.project.activeSequence && app.project.activeSequence.videoTracks.length > 0) {
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
             var clip = app.project.activeSequence.videoTracks[0].clips[0];
+            // Based on kiro.md: Use clip methods for timeline clips
             clip.setInPoint(inPoint, false);
             clip.setOutPoint(outPoint, false);
-            return "In/out points set to " + inPoint + " - " + outPoint;
+            return "Timeline clip In/Out points set: " + inPoint + "s to " + outPoint + "s";
         } else {
             return "No active sequence or clips available";
         }
@@ -149,11 +172,12 @@ function setInOutPoints(inPoint, outPoint) {
 
 function setClipStartEnd(start, end) {
     try {
-        if (app.project.activeSequence && app.project.activeSequence.videoTracks.length > 0) {
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
             var clip = app.project.activeSequence.videoTracks[0].clips[0];
-            clip.setStart(start);
-            clip.setEnd(end);
-            return "Clip start/end set to " + start + " - " + end;
+            // Based on kiro.md: Direct property manipulation (less preferred than move())
+            clip.start = start;
+            clip.end = end;
+            return "Clip timeline position set: " + start + "s to " + end + "s";
         } else {
             return "No active sequence or clips available";
         }
@@ -164,10 +188,17 @@ function setClipStartEnd(start, end) {
 
 function overwriteClip() {
     try {
-        if (app.project.activeSequence && app.project.activeSequence.videoTracks.length > 0) {
-            return "Overwrite clip operation would be performed here";
+        if (app.project.activeSequence && app.project.rootItem.children.numItems > 0) {
+            // Based on kiro.md: sequence.overwriteClip(projectItem, time, vTrackIndex, aTrackIndex)
+            var projectItem = app.project.rootItem.children[0]; // First item in project
+            var currentTime = app.project.activeSequence.getPlayerPosition();
+            var vTrackIndex = 0; // V1
+            var aTrackIndex = 0; // A1
+
+            app.project.activeSequence.overwriteClip(projectItem, currentTime, vTrackIndex, aTrackIndex);
+            return "Clip overwritten at playhead position on V1/A1";
         } else {
-            return "No active sequence or clips available";
+            return "No active sequence or project items available";
         }
     } catch (e) {
         return "Error overwriting clip: " + e.toString();
@@ -176,10 +207,13 @@ function overwriteClip() {
 
 function moveClip(trackIndex, newTime) {
     try {
-        if (app.project.activeSequence && app.project.activeSequence.videoTracks.length > trackIndex) {
-            return "Move clip operation would be performed here";
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
+            // Based on kiro.md: TrackItem.move(time, trackIndex) - preferred method
+            var clip = app.project.activeSequence.videoTracks[0].clips[0];
+            clip.move(newTime, trackIndex);
+            return "Clip moved to track " + trackIndex + " at " + newTime + " seconds";
         } else {
-            return "No active sequence or track available";
+            return "No active sequence or clips available";
         }
     } catch (e) {
         return "Error moving clip: " + e.toString();
@@ -224,7 +258,8 @@ function enableQE() {
 function addTransition() {
     try {
         if (app.project.activeSequence) {
-            return "Add transition operation would be performed here";
+            // Correct method: use qe.sequence.addTransition(track, time, duration) with QE API
+            return "Add transition: Use qe.sequence.addTransition(track, time, duration) with QE API";
         } else {
             return "No active sequence";
         }
@@ -235,10 +270,23 @@ function addTransition() {
 
 function addVideoEffect(effectName) {
     try {
-        if (app.project.activeSequence) {
-            return "Video effect '" + effectName + "' would be added here";
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
+            // Based on kiro.md: Must use QE API for adding effects
+            app.enableQE(); // Enable QE DOM
+
+            var qeSeq = qe.project.getActiveSequence();
+            var qeTrack = qeSeq.getVideoTrackAt(0); // V1
+            var qeClip = qeTrack.getItemAt(0); // First clip on V1
+            var effectToAdd = qe.project.getVideoEffectByName(effectName);
+
+            if (qeClip && effectToAdd) {
+                qeClip.addVideoEffect(effectToAdd);
+                return "Video effect '" + effectName + "' added to first clip on V1";
+            } else {
+                return "Effect '" + effectName + "' not found or no clip available";
+            }
         } else {
-            return "No active sequence";
+            return "No active sequence or clips available";
         }
     } catch (e) {
         return "Error adding video effect: " + e.toString();
@@ -259,10 +307,29 @@ function addAudioEffect(effectName) {
 
 function setEffectProperty(propertyName, value) {
     try {
-        if (app.project.activeSequence) {
-            return "Effect property '" + propertyName + "' would be set to '" + value + "'";
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
+            // Based on kiro.md: Component hierarchy access
+            var clip = app.project.activeSequence.videoTracks[0].clips[0];
+            var components = clip.components;
+
+            if (components.numItems > 0) {
+                // Find component by matchName (more reliable than display name)
+                for (var i = 0; i < components.numItems; i++) {
+                    var component = components[i];
+                    if (component.matchName.indexOf(propertyName) !== -1) {
+                        // Access first property and set value
+                        if (component.properties.numItems > 0) {
+                            component.properties[0].setValue(value, 1); // updateUI = 1
+                            return "Property '" + propertyName + "' set to '" + value + "'";
+                        }
+                    }
+                }
+                return "Property '" + propertyName + "' not found in clip components";
+            } else {
+                return "No components found on clip";
+            }
         } else {
-            return "No active sequence";
+            return "No active sequence or clips available";
         }
     } catch (e) {
         return "Error setting effect property: " + e.toString();
@@ -274,10 +341,28 @@ function setEffectProperty(propertyName, value) {
 function encodeSequence() {
     try {
         if (app.project.activeSequence) {
-            app.encoder.encodeSequence();
-            return "Sequence encoding started";
+            // Based on kiro.md: encodeSequence(sequence, outputPath, presetPath, workArea, removeUponCompletion)
+            var sequence = app.project.activeSequence;
+            var outputPath = "C:\\temp\\export_" + Date.now() + ".mp4"; // Sample output path
+            var presetPath = ""; // Would need actual preset file path
+            var workArea = 0; // 0 = Entire sequence, 1 = In to Out, 2 = Work Area
+            var removeUponCompletion = 0; // 0 = Keep in queue, 1 = Remove
+
+            // Launch encoder first (recommended)
+            app.encoder.launchEncoder();
+
+            var jobID = app.encoder.encodeSequence(sequence, outputPath, presetPath, workArea, removeUponCompletion);
+
+            // Save project after encoding (per kiro.md recommendation)
+            app.project.save();
+
+            if (jobID && jobID !== "0") {
+                return "Encoding started with Job ID: " + jobID + " to " + outputPath;
+            } else {
+                return "Failed to start encoding - returned 0";
+            }
         } else {
-            return "No active sequence";
+            return "No active sequence available";
         }
     } catch (e) {
         return "Error starting encoding: " + e.toString();
@@ -286,8 +371,13 @@ function encodeSequence() {
 
 function launchEncoder() {
     try {
-        app.encoder.launchEncoder();
-        return "Media Encoder launched";
+        // Based on kiro.md: app.encoder.launchEncoder() returns 0 if successful
+        var result = app.encoder.launchEncoder();
+        if (result === 0) {
+            return "Media Encoder launched successfully";
+        } else {
+            return "Failed to launch Media Encoder - returned: " + result;
+        }
     } catch (e) {
         return "Error launching Media Encoder: " + e.toString();
     }
@@ -304,8 +394,8 @@ function cancelJob() {
 
 function bindEncoder() {
     try {
-        app.encoder.bind();
-        return "Encoder bound successfully";
+        // Note: bind/unbind are undocumented/obsolete and not reliably supported
+        return "Encoder bind: Method is undocumented/obsolete and not reliably supported";
     } catch (e) {
         return "Error binding encoder: " + e.toString();
     }
@@ -313,8 +403,8 @@ function bindEncoder() {
 
 function unbindEncoder() {
     try {
-        app.encoder.unbind();
-        return "Encoder unbound successfully";
+        // Note: bind/unbind are undocumented/obsolete and not reliably supported
+        return "Encoder unbind: Method is undocumented/obsolete and not reliably supported";
     } catch (e) {
         return "Error unbinding encoder: " + e.toString();
     }
@@ -360,10 +450,11 @@ function getMediaPath() {
 
 function setMetadata(key, value) {
     try {
-        if (app.project.activeSequence && app.project.activeSequence.videoTracks.length > 0) {
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
             var clip = app.project.activeSequence.videoTracks[0].clips[0];
-            clip.projectItem.setMetadataValue(key, value);
-            return "Metadata set: " + key + " = " + value;
+            // Based on kiro.md: ProjectItem.setXMPMetadata(Key, Value, ColumnID/ColumnPath)
+            clip.projectItem.setXMPMetadata(key, value, "");
+            return "XMP Metadata set: " + key + " = " + value;
         } else {
             return "No active sequence or clips available";
         }
@@ -374,7 +465,8 @@ function setMetadata(key, value) {
 
 function getPresetPath() {
     try {
-        return app.getPresetPath();
+        // Correct method: use app.encoder.getPresets() for export presets
+        return "Preset path: Use app.encoder.getPresets() for export presets (getPresetPath doesn't exist)";
     } catch (e) {
         return "Error getting preset path: " + e.toString();
     }
@@ -382,8 +474,8 @@ function getPresetPath() {
 
 function getAppProperties() {
     try {
-        var props = app.properties;
-        return "App properties retrieved successfully";
+        // Note: app.properties is vague/undocumented. Use specific properties like app.project instead
+        return "App properties: Use specific properties like app.project (app.properties is undocumented)";
     } catch (e) {
         return "Error getting app properties: " + e.toString();
     }
@@ -440,5 +532,132 @@ function movePlayhead(timeInSeconds) {
         }
     } catch (e) {
         return "Error moving playhead: " + e.toString();
+    }
+}
+
+// ===== ADDITIONAL QE API FUNCTIONS =====
+
+function addCropEffect() {
+    try {
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
+            // Based on kiro.md example: Adding Crop effect using QE API
+            app.enableQE();
+
+            var qeSeq = qe.project.getActiveSequence();
+            var qeTrack = qeSeq.getVideoTrackAt(0); // V1
+            var qeClip = qeTrack.getItemAt(0); // First clip on V1
+            var effectToAdd = qe.project.getVideoEffectByName("Crop");
+
+            if (qeClip && effectToAdd) {
+                qeClip.addVideoEffect(effectToAdd);
+                return "Crop effect added successfully to first clip on V1";
+            } else {
+                return "Failed to add Crop effect - clip or effect not found";
+            }
+        } else {
+            return "No active sequence or clips available";
+        }
+    } catch (e) {
+        return "Error adding Crop effect: " + e.toString();
+    }
+}
+
+function getPlayheadPosition() {
+    try {
+        if (app.project.activeSequence) {
+            var position = app.project.activeSequence.getPlayerPosition();
+            return "Current playhead position: " + position.seconds + " seconds";
+        } else {
+            return "No active sequence available";
+        }
+    } catch (e) {
+        return "Error getting playhead position: " + e.toString();
+    }
+}
+
+function setClipInOut(inSeconds, outSeconds) {
+    try {
+        if (app.project.activeSequence && app.project.activeSequence.videoTracks[0].clips.numItems > 0) {
+            var clip = app.project.activeSequence.videoTracks[0].clips[0];
+            // Based on kiro.md: Set In and Out points before insertion
+            clip.projectItem.setInPoint(inSeconds, 4); // 4 = seconds timecode format
+            clip.projectItem.setOutPoint(outSeconds, 4);
+            return "Clip In/Out points set: " + inSeconds + "s to " + outSeconds + "s";
+        } else {
+            return "No active sequence or clips available";
+        }
+    } catch (e) {
+        return "Error setting clip in/out points: " + e.toString();
+    }
+}
+
+function reflectQEMethods() {
+    try {
+        app.enableQE();
+        // Based on kiro.md: Use qe.reflect.methods for dynamic inspection
+        if (typeof qe !== 'undefined' && qe.reflect && qe.reflect.methods) {
+            var methods = qe.reflect.methods();
+            return "QE Methods available: " + methods.toString();
+        } else {
+            return "QE reflection not available";
+        }
+    } catch (e) {
+        return "Error reflecting QE methods: " + e.toString();
+    }
+}
+
+// ===== DIAGNOSTIC FUNCTIONS =====
+
+function getProjectInfo() {
+    try {
+        var info = "=== PROJECT DIAGNOSTICS ===\n";
+        info += "Project name: " + (app.project.name || "Untitled") + "\n";
+        info += "Project items: " + app.project.rootItem.children.numItems + "\n";
+
+        if (app.project.activeSequence) {
+            info += "Active sequence: " + app.project.activeSequence.name + "\n";
+            info += "Video tracks: " + app.project.activeSequence.videoTracks.numTracks + "\n";
+            info += "Audio tracks: " + app.project.activeSequence.audioTracks.numTracks + "\n";
+
+            if (app.project.activeSequence.videoTracks.numTracks > 0) {
+                info += "V1 clips: " + app.project.activeSequence.videoTracks[0].clips.numItems + "\n";
+            }
+
+            if (app.project.activeSequence.audioTracks.numTracks > 0) {
+                info += "A1 clips: " + app.project.activeSequence.audioTracks[0].clips.numItems + "\n";
+            }
+        } else {
+            info += "No active sequence\n";
+        }
+
+        return info;
+    } catch (e) {
+        return "Error getting project info: " + e.toString();
+    }
+}
+
+function testAPICompatibility() {
+    try {
+        var results = "=== API COMPATIBILITY TEST ===\n";
+
+        // Test basic app object
+        results += "app object: " + (typeof app !== 'undefined' ? "✓" : "✗") + "\n";
+        results += "app.project: " + (typeof app.project !== 'undefined' ? "✓" : "✗") + "\n";
+        results += "app.encoder: " + (typeof app.encoder !== 'undefined' ? "✓" : "✗") + "\n";
+
+        // Test QE API availability
+        try {
+            app.enableQE();
+            results += "QE API: " + (typeof qe !== 'undefined' ? "✓" : "✗") + "\n";
+        } catch (qeError) {
+            results += "QE API: ✗ (Error: " + qeError.toString() + ")\n";
+        }
+
+        // Test sequence availability
+        results += "Active sequence: " + (app.project.activeSequence ? "✓" : "✗") + "\n";
+
+        return results;
+    } catch (e) {
+        return "Error testing API compatibility: " + e.toString();
     }
 }
